@@ -75,6 +75,18 @@ python3 tools/publish-drive.py --directory /work/distribution \
   --folder YOUR_DISTRIBUTION_FOLDER_ID --key /secure/uni-frame/publisher.pem
 ```
 
+To make a fresh host install connect to your library on first launch, pass the
+printed catalog link when building the host. It is a build input, not a
+repository setting, and must be the catalog file link (not the folder link):
+
+```bash
+UNI_FRAME_DEFAULT_CATALOG='https://drive.google.com/file/d/CATALOG_FILE_ID/view' \
+  ./gradlew :host:assembleRelease   # or -PuniFrameDefaultCatalog=...
+```
+
+Once a user connects another library, their choice is kept. Without the
+variable the host starts empty and asks for a link, as before.
+
 The publisher preserves the catalog's Drive file ID and prints a single share
 link for users to paste into Uni Frame. Internal folder/file IDs are publisher
 configuration; app users never need to enter them separately. Serialize

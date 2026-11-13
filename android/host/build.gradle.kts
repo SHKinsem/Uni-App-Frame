@@ -11,6 +11,13 @@ android {
         targetSdk = 36
         versionCode = 4
         versionName = "0.4.0-preview"
+        // Optional library a fresh install connects to on first launch. Supplied at build
+        // time so deployment links never live in this repository.
+        val defaultCatalog = (findProperty("uniFrameDefaultCatalog") as String?)
+            ?: System.getenv("UNI_FRAME_DEFAULT_CATALOG") ?: ""
+        require(defaultCatalog.isEmpty() || defaultCatalog.startsWith("https://")) { "Default catalog must be an HTTPS link" }
+        require(!defaultCatalog.contains("/drive/folders/")) { "Default catalog must be the catalog.json file link, not a Drive folder" }
+        resValue("string", "default_catalog_url", defaultCatalog)
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

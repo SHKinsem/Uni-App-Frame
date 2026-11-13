@@ -297,6 +297,11 @@ class MainActivity : Activity() {
         }
         refresh()
         if (address.isNotBlank()) synchronize(address)
+        else defaultCatalog()?.let { synchronize(it) }
+    }
+    /** Build-time default library, used only until the user has connected one themselves. */
+    private fun defaultCatalog(): String? = getString(R.string.default_catalog_url).trim().takeIf {
+        it.isNotEmpty() && try { CatalogVerifier.endpoint(it); true } catch (_: Exception) { false }
     }
     private fun dockTab(value: String, icon: Int, click: () -> Unit) = label(value, 14f, ink, true).apply {
         gravity = Gravity.CENTER; setPadding(dp(16), 0, dp(18), 0); compoundDrawablePadding = dp(8)
