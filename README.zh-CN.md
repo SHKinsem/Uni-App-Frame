@@ -6,7 +6,7 @@
 
 [English](README.md) · 简体中文
 
-[开发入门](docs/getting-started.md) · [接入已有项目](docs/app-repositories.md) · [Agent 开发技能](.agents/skills/uni-frame-app-development/SKILL.md)
+[开发入门](docs/getting-started.md) · [签名与云端迁移](docs/signing.md#更换云端环境时保留签名) · [接入已有项目](docs/app-repositories.md) · [Agent 开发技能](.agents/skills/uni-frame-app-development/SKILL.md)
 
 </div>
 
