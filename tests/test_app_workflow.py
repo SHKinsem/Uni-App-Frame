@@ -7,6 +7,7 @@ import shutil
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -32,6 +33,9 @@ class WorkflowTests(unittest.TestCase):
         self.stage.ROOT = self.root / 'framework'
         raw = self.stage.ROOT / 'android/host/src/main/res/raw'
         raw.mkdir(parents=True)
+        runtime_environment = patch.dict('os.environ', {'UNI_FRAME_RUNTIME_DIR': str(raw)})
+        runtime_environment.start()
+        self.addCleanup(runtime_environment.stop)
         self.key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         self.key_path = self.root / 'publisher.pem'
         self.key_path.write_bytes(self.key.private_bytes(serialization.Encoding.PEM,
