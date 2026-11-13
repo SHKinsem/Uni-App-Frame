@@ -1,7 +1,41 @@
+import java.security.KeyStore
+import java.security.MessageDigest
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
+
+// Keep signing identity outside the checkout so it can be restored on another builder.
+val signingPath = System.getenv("UNI_FRAME_SIGNING_PROPERTIES")
+val signingProperties = Properties()
+val signingDirectory = signingPath?.let { path ->
+    val config = file(path)
+    require(config.isFile) { "UNI_FRAME_SIGNING_PROPERTIES must point to an existing file" }
+    config.inputStream().use { signingProperties.load(it) }
+    config.parentFile
+}
+fun signingValue(name: String): String = signingProperties.getProperty(name)
+    ?.takeIf { it.isNotBlank() } ?: error("Missing APK signing property: $name")
+val configuredKeystore = if (signingDirectory != null) {
+    signingDirectory.resolve(signingValue("storeFile"))
+} else {
+    file(System.getenv("UNI_FRAME_DEBUG_KEYSTORE")
+        ?: error("Set UNI_FRAME_SIGNING_PROPERTIES, or an existing UNI_FRAME_DEBUG_KEYSTORE for previews"))
+}
+require(configuredKeystore.isFile) { "APK keystore missing; restore the original key instead of generating a replacement" }
+if (signingDirectory != null) {
+    val expected = signingValue("certificateSha256").replace(":", "").lowercase()
+    require(expected.matches(Regex("[0-9a-f]{64}"))) { "Invalid certificateSha256 in APK signing properties" }
+    val store = KeyStore.getInstance(configuredKeystore, signingValue("storePassword").toCharArray())
+    val alias = signingValue("keyAlias")
+    require(store.isKeyEntry(alias)) { "APK signing alias has no private key" }
+    val actual = MessageDigest.getInstance("SHA-256").digest(store.getCertificate(alias).encoded)
+        .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+    require(actual == expected) { "APK signing certificate differs from the pinned identity" }
+}
+
 android {
     namespace = "dev.uniapp.frame"
     compileSdk = 36
@@ -25,12 +59,22 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     signingConfigs {
-        getByName("debug") { storeFile = file(System.getenv("UNI_FRAME_DEBUG_KEYSTORE") ?: error("Set your external test keystore path")) }
+        if (signingDirectory != null) {
+            create("publisher") {
+                storeFile = configuredKeystore
+                storePassword = signingValue("storePassword")
+                keyAlias = signingValue("keyAlias")
+                keyPassword = signingValue("keyPassword")
+                signingProperties.getProperty("storeType")?.let { storeType = it }
+            }
+        } else {
+            getByName("debug") { storeFile = configuredKeystore }
+        }
     }
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (signingDirectory != null) "publisher" else "debug")
         }
     }
 }
