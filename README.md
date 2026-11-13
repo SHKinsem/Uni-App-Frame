@@ -23,12 +23,17 @@ What I wanted was straightforward: build and publish a new version in the cloud,
 <table>
   <tr>
     <td align="center"><img src="docs/screenshots/welcome.png" width="240" alt="Uni Frame before connecting an app library"><br><b>Connect a library</b></td>
-    <td align="center"><img src="docs/screenshots/library.png" width="240" alt="A sample app available in the library"><br><b>Choose an app</b></td>
+    <td align="center"><img src="docs/screenshots/library.png" width="240" alt="Apps from a sample library, one installed"><br><b>Choose an app</b></td>
     <td align="center"><img src="docs/screenshots/counter.png" width="240" alt="The Flutter counter template running inside Uni Frame"><br><b>Open it in Uni Frame</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/running.png" width="240" alt="Home screen with the running app card and the silver backdrop"><br><b>Return to a running app</b></td>
+    <td align="center"><img src="docs/screenshots/appearance.png" width="240" alt="Appearance sheet with backdrop, dimming and accent color"><br><b>Make it yours</b></td>
+    <td></td>
   </tr>
 </table>
 
-Android 14 emulator captures: the 0.4.0 client and the Flutter counter template. The client UI is currently in Chinese. [Capture details](docs/screenshots/README.md).
+Renders of the redesigned client at 720 × 1280 (the counter is an Android 14 emulator capture). The client UI is currently in Chinese. [Image details](docs/screenshots/README.md).
 
 ## From a cloud build to your phone
 

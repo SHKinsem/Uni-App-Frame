@@ -23,12 +23,17 @@
 <table>
   <tr>
     <td align="center"><img src="docs/screenshots/welcome.png" width="240" alt="尚未连接应用库的 Uni Frame 首页"><br><b>连接应用库</b></td>
-    <td align="center"><img src="docs/screenshots/library.png" width="240" alt="应用库中的通用示例应用"><br><b>选择应用</b></td>
+    <td align="center"><img src="docs/screenshots/library.png" width="240" alt="示例应用库中的应用，其中一款已安装"><br><b>选择应用</b></td>
     <td align="center"><img src="docs/screenshots/counter.png" width="240" alt="在 Uni Frame 内运行 Flutter 计数器模板"><br><b>在 Uni Frame 中运行</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/running.png" width="240" alt="银灰背景下的首页与正在运行卡片"><br><b>回到正在运行的应用</b></td>
+    <td align="center"><img src="docs/screenshots/appearance.png" width="240" alt="外观设置：背景、暗化与主色"><br><b>自定义外观</b></td>
+    <td></td>
   </tr>
 </table>
 
-Android 14 模拟器实拍：0.4.0 客户端与通用 Flutter 计数器模板。客户端目前使用中文界面。[截图说明](docs/screenshots/README.md)。
+新版客户端界面的 720 × 1280 渲染图（计数器画面为 Android 14 模拟器实拍）。客户端目前使用中文界面。[图片说明](docs/screenshots/README.md)。
 
 ## 从云端构建到手机试用
 
