@@ -43,8 +43,8 @@ android {
         applicationId = "dev.uniapp.frame"
         minSdk = 24
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.4.0-preview"
+        versionCode = 5
+        versionName = "0.5.0-preview"
         // Optional library a fresh install connects to on first launch. Supplied at build
         // time so deployment links never live in this repository.
         val defaultCatalog = (findProperty("uniFrameDefaultCatalog") as String?)
