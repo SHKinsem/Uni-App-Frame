@@ -1,0 +1,12 @@
+build/
+**/build/
+.gradle/
+**/.gradle/
+local.properties
+**/local.properties
+__pycache__/
+*.pem
+*.keystore
+*.jks
+android/host/src/main/res/raw/publisher.der
+android/host/src/main/res/raw/runtime_profiles.json
