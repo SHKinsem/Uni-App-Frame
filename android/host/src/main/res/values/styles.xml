@@ -1,11 +1,15 @@
 <resources>
-    <style name="Theme.UniFrame" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.UniFrame" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#6553DE</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
-        <item name="android:statusBarColor">#F7F7FB</item>
-        <item name="android:navigationBarColor">#F7F7FB</item>
-        <item name="android:windowBackground">#F7F7FB</item>
+        <item name="android:colorAccent">#8B7BFF</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/frame_ink</item>
+        <item name="android:alertDialogTheme">@style/Theme.UniFrame.Dialog</item>
+    </style>
+    <style name="Theme.UniFrame.Dialog" parent="android:style/Theme.Material.Dialog.Alert">
+        <item name="android:colorAccent">#B3A8FF</item>
+        <item name="android:windowBackground">@drawable/dialog_surface</item>
     </style>
 </resources>
