@@ -1,109 +1,96 @@
+<div align="center">
+
 # Uni Frame
 
-A preview Android container for trusted, signed Flutter modules. One catalog
-link lists multiple apps. Sources can use ordinary HTTPS hosting or a public
-Google Drive catalog file. Business apps remain in separate repositories.
+**Update and try your Flutter apps on Android, with less time spent moving and installing APKs.**
 
-This framework repository contains no personal app implementations, deployment
-URLs, account IDs, publisher keys, production APKs or historical Git commits.
-Test archives contain synthetic bytes, not an executable business application.
+English · [简体中文](README.zh-CN.md)
 
-## Repository relationship
+[Getting started](docs/getting-started.md) · [App integration](docs/app-repositories.md) · [Agent skill](.agents/skills/uni-frame-app-development/SKILL.md)
 
-Maintain one framework repository. Business applications reference an exact
-framework commit as the `vendor/uni-frame` Git submodule; they do not copy or
-fork the framework implementation. Shared Android adapters and build conventions
-live in `integrations/android`. See [app integration](docs/app-repositories.md).
+</div>
 
-## Build prerequisites
+## Why I built this
 
-Use a cloud Linux build machine with Flutter 3.41.6 / Dart 3.11.4, JDK 21,
-Android SDK 36, build-tools 36.0.0 and NDK 28.2.13676358. Host settings pin
-AGP 8.11.1, Kotlin 2.2.20 and Gradle 8.14. Python dependencies are in
-requirements.txt. Set ANDROID_HOME, ANDROID_SDK_ROOT and the usual SDK paths.
+I started Uni Frame because getting each new build onto my phone had become a chore.
 
-Build Tencent Shadow from commit b2a7a7487d8dddd26e2e22e990965ea3805080cf
-in a separate checkout using JDK 17, `CI=false`, and
-`DISABLE_TENCENT_MAVEN_MIRROR=1`; run `./gradlew publishToMavenLocal`.
-The expected Maven version is local-b2a7a74-SNAPSHOT. Use the same Maven
-repository when building apps and host. Return to JDK 21 for this project.
+I work on several Flutter projects, sometimes with GPT helping me write code and compile it in the cloud. But a finished build still leaves me with work to do: download the APK, transfer it to my phone, install or upgrade the app, and only then check whether the change works. If it needs another adjustment, I do it all again. Even a small change means repeating those steps, and each project adds another app to keep up to date.
 
-Generate your own publisher key and runtime profiles; paths below are examples:
+What I wanted was straightforward: build and publish a new version in the cloud, then pick up my phone and keep testing. I built Uni Frame to keep these projects in one Android app, where my phone can get the published versions directly, so I don't have to move each build from my computer to my phone myself.
 
-```bash
-python3 tools/prepare-runtime.py \
-  --flutter-sdk /opt/flutter-3.41.6 \
-  --shadow-maven-repo /opt/maven-repository \
-  --llvm-strip /opt/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip \
-  --publisher-key /secure/uni-frame/publisher.pem --create-key
-export UNI_FRAME_DEBUG_KEYSTORE=/secure/uni-frame/test.keystore
-cd android
-./gradlew :host:testReleaseUnitTest :host:assembleRelease
-```
+## A look inside
 
-The test keystore must be created separately, using Android's standard debug
-alias/password for the preview build. Production signing needs your own signing
-configuration. Keep keystores and publisher private keys outside repositories.
-Generated public trust resources are ignored by Git. Never rotate an existing
-publisher key without planning migration of installed hosts.
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/welcome.png" width="240" alt="Uni Frame before connecting an app library"><br><b>Connect a library</b></td>
+    <td align="center"><img src="docs/screenshots/library.png" width="240" alt="A sample app available in the library"><br><b>Choose an app</b></td>
+    <td align="center"><img src="docs/screenshots/counter.png" width="240" alt="The Flutter counter template running inside Uni Frame"><br><b>Open it in Uni Frame</b></td>
+  </tr>
+</table>
 
-## Create and publish an app
+Android 14 emulator captures: the 0.4.0 client and the Flutter counter template. The client UI is currently in Chinese. [Capture details](docs/screenshots/README.md).
+
+## From a cloud build to your phone
+
+Once a project is integrated with Uni Frame, the usual testing workflow is:
+
+1. Build a new version in the cloud and publish its module to an app library hosted over HTTPS or publicly on Google Drive.
+2. Open Uni Frame on your phone, refresh the library, and download or update the app.
+3. Open the app inside Uni Frame and keep testing. Installed apps can also be reopened offline.
+
+Each integrated Flutter project can produce both a standalone APK and a `.uaf` module from the same codebase. It keeps its own repository and can still be installed independently. When testing the module inside Uni Frame, you no longer need to transfer and separately install an APK for each app update.
+
+Uni Frame uses [Flutter](https://flutter.dev) and [Tencent Shadow](https://github.com/Tencent/Shadow). It runs modules built for its runtime and cannot import arbitrary APKs. Before loading a module, it checks publisher signatures, file hashes and runtime compatibility. Updates to the Uni Frame client itself still go through Android's installation confirmation.
+
+## Use an app library
+
+1. Install the Uni Frame client supplied by your library's publisher.
+2. Choose **连接应用库** and paste the library URL. For Drive, use the catalog file's share link.
+3. Install an app from the list, then open it. Refresh the library to check for app updates.
+
+Use **更多选项 → 检查更新** to check for a newer client. The client and its modules must use the same publisher trust and compatible runtime profiles.
+
+## Build an app
+
+Start with the [build setup](docs/getting-started.md), then create a project:
 
 ```bash
 python3 tools/new-app.py /work/my_app \
   --name my_app --package dev.example.my_app --title 'My App'
 ```
 
-The generator initializes an app Git repository and a framework submodule pinned
-to the current framework commit. The framework must be committed and available
-at its origin (or supply --framework-repository). The template generates a generic
-Flutter counter. Replace it with your own
-business UI and tests. Commit source and pubspec.lock in that app's repository.
-Configure its website/Drive source with --source-url or UNI_FRAME_SOURCE_URL;
-there is no built-in deployment or default account in this framework.
-
-Use release-app.py to produce normal APKs and signed plugin bundles. Use
-stage-app.py to merge releases into a complete local distribution directory.
-All signing commands require --key. A plugin APK is an intermediate artifact,
-not an APK to install over the host.
-
-For Drive, create a dedicated folder and set it to anyone-with-link / viewer.
-Provide a short-lived OAuth token through GOOGLE_DRIVE_ACCESS_TOKEN, then run:
+The generated project contains a Flutter counter, Android build flavors and a framework dependency pinned at `vendor/uni-frame`. Replace the counter with your app, commit its source and lockfile, then build a release:
 
 ```bash
-python3 tools/publish-drive.py --directory /work/distribution \
-  --folder YOUR_DISTRIBUTION_FOLDER_ID --key /secure/uni-frame/publisher.pem
+cd /work/my_app
+python3 tools/uni-frame.py release --sequence 1 \
+  --output /work/releases/my-app-1 --key /secure/uni-frame/publisher.pem
 ```
 
-To make a fresh host install connect to your library on first launch, pass the
-printed catalog link when building the host. It is a build input, not a
-repository setting, and must be the catalog file link (not the folder link):
+The release command runs analysis and tests, builds both flavors for each configured ABI, and packages signed modules. [Stage and publish the release](docs/getting-started.md#publish-a-library) to make it available in the client.
 
-```bash
-UNI_FRAME_DEFAULT_CATALOG='https://drive.google.com/file/d/CATALOG_FILE_ID/view' \
-  ./gradlew :host:assembleRelease   # or -PuniFrameDefaultCatalog=...
-```
+Existing projects can use the [Android integration guide](docs/app-repositories.md). Coding agents can follow the included [development skill](.agents/skills/uni-frame-app-development/SKILL.md); publishing uses ordinary HTTPS hosting or the Google Drive API.
 
-Once a user connects another library, their choice is kept. Without the
-variable the host starts empty and asks for a link, as before.
+## Current support
 
-The publisher preserves the catalog's Drive file ID and prints a single share
-link for users to paste into Uni Frame. Internal folder/file IDs are publisher
-configuration; app users never need to enter them separately. Serialize
-publications, preserve the complete local distribution, and keep immutable
-release files. Uploaded app modules are verified by publisher signature and
-digest before installation. Drive may show a browser confirmation for host APK
-downloads; the host does not bypass it or silently install updates.
+| Area | Preview support |
+| --- | --- |
+| Android | Declared minimum: Android 7.0 / API 24; emulator validation on Android 14 |
+| Architectures | ARM64 and x86_64 |
+| Runtime | Flutter 3.41.6 / Dart 3.11.4, pinned Shadow build |
+| App sessions | One running module at a time |
+| Distribution | HTTPS and public Google Drive catalog files |
+| Project Android services | Not supported yet |
 
-## Preview limitations
+Modules run as trusted publisher code; the host is not a security sandbox for arbitrary apps. Catalogs and bundles expire and need renewal. Device permissions, BLE and other hardware integrations need testing on the target devices. Drive downloads are subject to Google's availability and download limits.
 
-- Minimum declared Android API 24; ARM64 and x86_64 runtime profiles only.
-- One module runs at a time. Project Android services are not supported yet.
-- Trusted publisher model; this is not an isolation sandbox for arbitrary code.
-- Catalogs and bundles expire. Renew signed metadata before expiry; there is
-  no automatic renewal scheduler in this source distribution.
-- Build and protocol tests do not establish real-device, BLE or Garmin coverage.
-- Google Drive availability and download limits remain provider constraints.
+## In this repository
 
-Choose an open-source license and review third-party notices before publishing.
-No license choice is imposed by this export.
+| Path | Contents |
+| --- | --- |
+| [`android/host`](android/host) | App library UI, module loading and client updates |
+| [`integrations/android`](integrations/android) | Shared Android adapters and toolchain settings |
+| [`templates/flutter-android`](templates/flutter-android) | App template with standalone and module flavors |
+| [`tools`](tools) | Project generation, builds, signing and publishing |
+| [`uni_frame`](uni_frame) · [`tests`](tests) | Package format, verification and tests |
+| [`docs`](docs) | Setup, app integration and screenshots |

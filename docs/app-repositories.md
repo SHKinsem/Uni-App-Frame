@@ -1,13 +1,13 @@
-# One framework, separate applications
+# Integrate an app
 
-Maintain this framework in one repository. Each business application owns its
-source, package identity, release sequence, signing configuration and deployment
-configuration in its own repository. The framework does not list downstream
-applications or store their metadata.
+[English overview](../README.md) · [中文概览](../README.zh-CN.md) · [Build setup](getting-started.md)
+
+Each app keeps its source, Android package, signing and release configuration
+in its own repository.
 
 Applications reference the framework as a Git submodule at `vendor/uni-frame`.
 The parent repository records an exact commit, so publishing a framework change
-never silently changes a business application's next build.
+does not change an app's build until its dependency is updated.
 
 Clone an application with `git clone --recurse-submodules`, or initialize an
 existing checkout with `git submodule update --init --recursive`.
@@ -23,7 +23,7 @@ That shared script registers the common Kotlin source directory, the plugin
 flavor's host package ID, resource package ID and compile-only Shadow runtime.
 Application-specific Android classes are small wrappers extending
 `UniFrameActivity` and `UniFrameApplication`. Context/asset fixes live in the
-framework, not in copied business-project code. Keep permissions, standalone
+framework. Keep permissions, standalone
 package names, data migration, signing and project-specific Gradle logic in the app.
 
 ## App commands
@@ -53,5 +53,3 @@ default during project generation. Never commit private keys or access tokens.
 Fetch the desired framework release inside the submodule, check out its exact
 commit, run app tests and both build flavors, then commit the submodule pointer
 in the app repository. Roll out framework changes to each app deliberately.
-The framework must never depend on, clone, test against or package a personal
-business repository as part of its own public build.
