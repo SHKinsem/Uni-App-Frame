@@ -9,15 +9,13 @@ Read README.md and the current project's AGENTS.md. Locate the framework with
 UNI_FRAME_ROOT or its tools/new-app.py script. Uni Frame is this Flutter/Shadow
 container, not DCloud uni-app. Compile in the cloud, not the user's local PC.
 
-1. Keep business apps in separate repositories. Never embed real app source,
-   deployment accounts, private keys or device recordings into the framework.
-   Apps reference this framework at an exact commit through vendor/uni-frame.
-   Read docs/app-repositories.md; use shared Android adapters and tools/app.py.
-   Maintain one framework repository, not a private framework fork plus an export.
+1. Apps reference an exact framework commit through vendor/uni-frame.
+   Read docs/app-repositories.md and docs/getting-started.md; use the shared
+   Android adapters and tools/app.py. Keep app-specific code in the app repository.
 2. Use Flutter 3.41.6 and the pinned Shadow runtime. Run tools/new-app.py for new
    apps; evaluate existing apps before adapting their platform code.
-3. Implement user requirements and a clear UI. Keep both flavors' Dart business
-   code identical, lock dependencies, test meaningful behavior, and commit source.
+3. Implement user requirements and a clear UI. Share Dart code between both
+   flavors, lock dependencies, test meaningful behavior, and commit source.
 4. Use tools/release-app.py with an increasing sequence and external publisher
    key. Preserve package identity and standalone APK signing across updates.
 5. Verify independent APK startup and Uni Frame HTTPS download/startup. Exercise
@@ -25,8 +23,7 @@ container, not DCloud uni-app. Compile in the cloud, not the user's local PC.
    emulator and static verification. Do not inject bundles by ADB as download proof.
 6. Stage a complete distribution using tools/stage-app.py. Publish with ordinary
    HTTPS upload tools or tools/publish-drive.py and the user's OAuth credentials.
-   The publisher requires no GPT service. The user pastes one catalog link;
-   internal deployment IDs stay out of the product flow.
+   The user pastes one catalog link to browse the published apps.
 7. Keep publisher keys and OAuth tokens in secret storage. Preserve catalog IDs,
    other apps and all published ABIs. Serialize publishing and reject downgrades.
 8. Deliver APK/source links, tested platforms and metadata expiry dates. Host
