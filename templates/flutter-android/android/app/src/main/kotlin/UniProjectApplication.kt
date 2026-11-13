@@ -1,17 +1,5 @@
 package __PACKAGE__
 
-import android.app.Application
-import android.content.Context
-import android.util.Log
+import dev.uniapp.frame.adapter.UniFrameApplication
 
-/** Explicit subclass lets Shadow transform Flutter's default Android Application. */
-class UniProjectApplication : Application() {
-    override fun createPackageContext(packageName: String, flags: Int): Context =
-        if (packageName == this.packageName && flags == 0) this
-        else super.createPackageContext(packageName, flags)
-
-    override fun onCreate() {
-        super.onCreate()
-        Log.i("UniProject", "Downloaded application initialized: __PACKAGE__; context-adapter-v3")
-    }
-}
+class UniProjectApplication : UniFrameApplication()

@@ -33,6 +33,9 @@ def main():
     config = json.loads((project / 'uni.project.json').read_text())
     if config.get('formatVersion') != 1 or not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}', config['projectId']):
         parser.error('Invalid project configuration or internal project ID')
+    flutter_project = (project / config.get('flutterDirectory', '.')).resolve()
+    if not flutter_project.is_relative_to(project) or not (flutter_project / 'pubspec.yaml').is_file():
+        parser.error('Invalid Flutter application directory')
     if args.sequence < 1 or not 1 <= args.valid_days <= 365:
         parser.error('sequence must be positive; valid-days must be 1–365')
     if output.exists() or output.is_relative_to(project):
@@ -45,10 +48,15 @@ def main():
     if version['frameworkVersion'] != '3.41.6':
         parser.error('Host runtime is pinned to Flutter 3.41.6')
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=project, text=True).strip()
-    lock = (project / 'pubspec.lock').read_bytes()
-    run('flutter', 'pub', 'get', '--enforce-lockfile', cwd=project)
-    run('flutter', 'analyze', cwd=project)
-    run('flutter', 'test', cwd=project)
+    lock = (flutter_project / 'pubspec.lock').read_bytes()
+    run('flutter', 'pub', 'get', '--enforce-lockfile', cwd=flutter_project)
+    run('flutter', 'analyze', cwd=flutter_project)
+    run('flutter', 'test', cwd=flutter_project)
+    for check in config.get('checks', []):
+        check_directory = (project / check['directory']).resolve()
+        if not check_directory.is_relative_to(project):
+            raise ValueError('Check directory leaves the app repository')
+        run(*check['command'], cwd=check_directory)
     output.mkdir(parents=True)
     releases = []
     for abi in config['abis']:
@@ -58,11 +66,11 @@ def main():
             # Normal pub resolution is needed to remove test-only native registrants.
             # Do not use --no-pub after analyze/test. Verify the lock after each build.
             run('flutter', 'build', 'apk', '--release', '--flavor', flavor,
-                '--target-platform', platform, '--build-number', args.sequence, cwd=project)
-            if (project / 'pubspec.lock').read_bytes() != lock:
+                '--target-platform', platform, cwd=flutter_project)
+            if (flutter_project / 'pubspec.lock').read_bytes() != lock:
                 raise ValueError('Dependency lock changed during release')
             apk = output / f"{config['projectId']}-{abi}-{args.sequence}-{flavor}.apk"
-            shutil.copyfile(project / f'build/app/outputs/flutter-apk/app-{flavor}-release.apk', apk)
+            shutil.copyfile(flutter_project / f'build/app/outputs/flutter-apk/app-{flavor}-release.apk', apk)
             sdk = Path(os.environ['ANDROID_HOME'])
             analyzer = sdk / 'cmdline-tools/latest/bin/apkanalyzer'
             manifest = ET.fromstring(subprocess.check_output([str(analyzer), 'manifest', 'print', str(apk)]))

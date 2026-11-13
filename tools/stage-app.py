@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from uni_frame.package import safe_path, verify
+from uni_frame.config import runtime_resources
 
 
 def read_catalog(path, public_key):
@@ -51,10 +52,10 @@ def stage(release_dir, directory, key_path):
     if not directory.is_dir():
         raise ValueError('Site distribution must already exist')
     key = serialization.load_pem_private_key(key_path.read_bytes(), password=None)
-    trusted = serialization.load_der_public_key((ROOT / 'android/host/src/main/res/raw/publisher.der').read_bytes())
+    trusted = serialization.load_der_public_key((runtime_resources(ROOT) / 'publisher.der').read_bytes())
     if key.public_key().public_numbers() != trusted.public_numbers():
         raise ValueError('Signing key differs from the host publisher key')
-    profiles = json.loads((ROOT / 'android/host/src/main/res/raw/runtime_profiles.json').read_text())
+    profiles = json.loads((runtime_resources(ROOT) / 'runtime_profiles.json').read_text())
     receipt = json.loads((release_dir / 'release.json').read_text())
     destination = directory / 'catalog.json'
     catalog = read_catalog(destination, trusted) if destination.exists() else {

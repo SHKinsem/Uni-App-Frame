@@ -4,9 +4,16 @@ A preview Android container for trusted, signed Flutter modules. One catalog
 link lists multiple apps. Sources can use ordinary HTTPS hosting or a public
 Google Drive catalog file. Business apps remain in separate repositories.
 
-This source distribution contains no personal app implementations, deployment
+This framework repository contains no personal app implementations, deployment
 URLs, account IDs, publisher keys, production APKs or historical Git commits.
 Test archives contain synthetic bytes, not an executable business application.
+
+## Repository relationship
+
+Maintain one framework repository. Business applications reference an exact
+framework commit as the `vendor/uni-frame` Git submodule; they do not copy or
+fork the framework implementation. Shared Android adapters and build conventions
+live in `integrations/android`. See [app integration](docs/app-repositories.md).
 
 ## Build prerequisites
 
@@ -47,7 +54,10 @@ python3 tools/new-app.py /work/my_app \
   --name my_app --package dev.example.my_app --title 'My App'
 ```
 
-The template generates a generic Flutter counter. Replace it with your own
+The generator initializes an app Git repository and a framework submodule pinned
+to the current framework commit. The framework must be committed and available
+at its origin (or supply --framework-repository). The template generates a generic
+Flutter counter. Replace it with your own
 business UI and tests. Commit source and pubspec.lock in that app's repository.
 Configure its website/Drive source with --source-url or UNI_FRAME_SOURCE_URL;
 there is no built-in deployment or default account in this framework.

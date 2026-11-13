@@ -10,3 +10,6 @@ __pycache__/
 *.jks
 android/host/src/main/res/raw/publisher.der
 android/host/src/main/res/raw/runtime_profiles.json
+
+# Local build storage may be a symlink to external private deployment data.
+/build

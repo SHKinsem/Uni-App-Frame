@@ -11,7 +11,7 @@ from xml.sax.saxutils import escape
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def create(directory, name, package, title, source_url=None):
+def create(directory, name, package, title, source_url=None, framework_repository=None):
     if not re.fullmatch(r'[a-z][a-z0-9]*(?:_[a-z0-9]+)*', name):
         raise ValueError('Use a lower_case Flutter project name')
     if not re.fullmatch(r'[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*){2,}', package):
@@ -23,6 +23,11 @@ def create(directory, name, package, title, source_url=None):
     directory = directory.absolute()
     if directory.exists():
         raise FileExistsError(f'Refusing to replace {directory}')
+    if not framework_repository:
+        framework_repository = subprocess.check_output(['git', '-C', str(ROOT), 'remote', 'get-url', 'origin'], text=True).strip()
+    framework_commit = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
+    if subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain']).strip():
+        raise ValueError('Commit framework changes before generating an app pinned to this version')
     version = json.loads(subprocess.check_output(['flutter', '--version', '--machine'], text=True))
     if version['frameworkVersion'] != '3.41.6':
         raise ValueError('This host requires Flutter 3.41.6; do not silently upgrade the runtime')
@@ -67,6 +72,21 @@ Do not claim hardware or Android-version coverage from a successful build.
 Use the configured distribution source; never expose signing keys in source or public files.
 Explicit user choices override these defaults.
 ''')
+    subprocess.run(['git', 'init', '-b', 'main', str(directory)], check=True)
+    subprocess.run(['git', 'submodule', 'add', framework_repository, 'vendor/uni-frame'], cwd=directory, check=True)
+    subprocess.run(['git', 'checkout', '--detach', framework_commit], cwd=directory / 'vendor/uni-frame', check=True)
+    subprocess.run(['git', 'add', 'vendor/uni-frame'], cwd=directory, check=True)
+    (directory / 'tools').mkdir(exist_ok=True)
+    (directory / 'tools/uni-frame.py').write_text('''#!/usr/bin/env python3
+from pathlib import Path
+import subprocess
+import sys
+root = Path(__file__).resolve().parents[1]
+entry = root / 'vendor/uni-frame/tools/app.py'
+if not entry.is_file():
+    raise SystemExit('Run git submodule update --init --recursive first')
+subprocess.run([sys.executable, str(entry), '--project', str(root), *sys.argv[1:]], check=True)
+''')
     print(directory)
 
 
@@ -77,5 +97,6 @@ if __name__ == '__main__':
     parser.add_argument('--package', required=True)
     parser.add_argument('--title', required=True)
     parser.add_argument('--source-url', help='Website or public Drive catalog link; optional during development')
+    parser.add_argument('--framework-repository', help='Defaults to this framework checkout origin')
     args = parser.parse_args()
-    create(args.directory, args.name, args.package, args.title, args.source_url)
+    create(args.directory, args.name, args.package, args.title, args.source_url, args.framework_repository)

@@ -23,6 +23,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from uni_frame.package import safe_path, verify
+from uni_frame.config import runtime_resources
 
 
 def link(file_id):
@@ -56,11 +57,11 @@ def local_file(directory, name):
 
 
 def load_distribution(directory, key):
-    trusted = serialization.load_der_public_key((ROOT / 'android/host/src/main/res/raw/publisher.der').read_bytes())
+    trusted = serialization.load_der_public_key((runtime_resources(ROOT) / 'publisher.der').read_bytes())
     if trusted.public_numbers() != key.public_key().public_numbers():
         raise ValueError('Publisher key differs from the installed host trust')
     catalog = read_signed((directory / 'catalog.json').read_bytes(), trusted)
-    profiles = json.loads((ROOT / 'android/host/src/main/res/raw/runtime_profiles.json').read_text())
+    profiles = json.loads((runtime_resources(ROOT) / 'runtime_profiles.json').read_text())
     now = int(time.time())
     if catalog['formatVersion'] != 1 or catalog['expiresAt'] <= now:
         raise ValueError('Unsupported or expired local catalog; renew before publishing')

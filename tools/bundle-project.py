@@ -15,6 +15,7 @@ from cryptography.hazmat.primitives import serialization
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from uni_frame.package import pack
+from uni_frame.config import runtime_resources
 
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--apk', type=Path, required=True)
@@ -30,7 +31,7 @@ p.add_argument('--min-api', type=int, default=24)
 args = p.parse_args()
 if not 1 <= args.valid_days <= 365 or args.min_api < 24:
     p.error('valid-days must be 1–365 and min-api must be at least 24')
-profiles = json.loads((ROOT / 'android/host/src/main/res/raw/runtime_profiles.json').read_text())
+profiles = json.loads((runtime_resources(ROOT) / 'runtime_profiles.json').read_text())
 profile = profiles[args.abi]
 commit = subprocess.check_output(['git','-C',str(args.repository),'rev-parse','HEAD'], text=True).strip()
 subprocess.run(['git','-C',str(args.repository),'diff','--exit-code','HEAD'],check=True,stdout=subprocess.DEVNULL)
@@ -45,7 +46,7 @@ metadata = {'formatVersion':1,'projectId':args.project,'buildId':f'{commit[:12]}
             'runtimeFingerprint':profile['fingerprint'],'requiredCapabilities':['storage.project.v1'],
             'entryActivity':args.entry,'dataSchemaVersion':1}
 key = serialization.load_pem_private_key(args.key.read_bytes(),password=None)
-trusted = serialization.load_der_public_key((ROOT / 'android/host/src/main/res/raw/publisher.der').read_bytes())
+trusted = serialization.load_der_public_key((runtime_resources(ROOT) / 'publisher.der').read_bytes())
 if key.public_key().public_numbers() != trusted.public_numbers():
     raise ValueError('Signing key does not match the host publisher key')
 args.output.parent.mkdir(parents=True,exist_ok=True)

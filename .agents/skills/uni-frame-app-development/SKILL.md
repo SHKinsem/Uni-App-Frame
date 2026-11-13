@@ -11,6 +11,9 @@ container, not DCloud uni-app. Compile in the cloud, not the user's local PC.
 
 1. Keep business apps in separate repositories. Never embed real app source,
    deployment accounts, private keys or device recordings into the framework.
+   Apps reference this framework at an exact commit through vendor/uni-frame.
+   Read docs/app-repositories.md; use shared Android adapters and tools/app.py.
+   Maintain one framework repository, not a private framework fork plus an export.
 2. Use Flutter 3.41.6 and the pinned Shadow runtime. Run tools/new-app.py for new
    apps; evaluate existing apps before adapting their platform code.
 3. Implement user requirements and a clear UI. Keep both flavors' Dart business

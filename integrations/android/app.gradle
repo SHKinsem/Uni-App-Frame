@@ -1,0 +1,12 @@
+// Applied by Flutter app projects after the Android, Shadow and Flutter plugins.
+def framework = project.file(project.property('uniFrameRoot'))
+def versions = new Properties()
+new File(framework, 'integrations/android/toolchain.properties').withInputStream { versions.load(it) }
+android {
+    sourceSets.main.java.srcDir(new File(framework, 'integrations/android/src/main/kotlin'))
+    productFlavors.getByName('plugin').applicationId = versions.getProperty('hostApplicationId')
+    androidResources.additionalParameters += ['--package-id', '0x7E', '--allow-reserved-package-id']
+}
+dependencies {
+    add('pluginCompileOnly', "com.tencent.shadow.core:runtime:${versions.getProperty('shadowVersion')}")
+}
