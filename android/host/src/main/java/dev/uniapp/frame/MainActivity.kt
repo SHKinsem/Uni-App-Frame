@@ -374,18 +374,18 @@ class MainActivity : Activity() {
     private fun showAppearance() {
         val sheet = android.app.Dialog(this, android.R.style.Theme_Material_Dialog_NoActionBar)
         val body = vertical().apply {
-            setPadding(dp(22), dp(12), dp(22), dp(26))
+            setPadding(dp(22), dp(10), dp(22), dp(20))
             background = GradientDrawable().apply {
                 setColor(0xF51C1D24.toInt()); setStroke(dp(1), 0x24FFFFFF)
                 cornerRadii = floatArrayOf(dp(28).toFloat(), dp(28).toFloat(), dp(28).toFloat(), dp(28).toFloat(), 0f, 0f, 0f, 0f)
             }
         }
         body.addView(View(this).apply { background = shape(0x40FFFFFF, 2) }, LinearLayout.LayoutParams(dp(40), dp(4)).apply { gravity = Gravity.CENTER_HORIZONTAL })
-        space(body, 18)
+        space(body, 14)
         body.addView(label("外观", 22f, ink, true))
         space(body, 6)
         body.addView(label("背景和主色只保存在这台设备上。", 13f, muted))
-        space(body, 22)
+        space(body, 18)
         body.addView(label("背景", 13f, muted, true))
         space(body, 10)
         var chosenAccent = accent
@@ -422,10 +422,10 @@ class MainActivity : Activity() {
                 else { appearance.backdrop = kind; applyBackdrop(); markTiles() }
             }
             tiles += kind to tile
-            options.addView(tile, LinearLayout.LayoutParams(0, dp(96), 1f).apply { if (tiles.size > 1) leftMargin = dp(10) })
+            options.addView(tile, LinearLayout.LayoutParams(0, dp(80), 1f).apply { if (tiles.size > 1) leftMargin = dp(10) })
         }
         body.addView(options)
-        space(body, 20)
+        space(body, 14)
 
         val dimRow = row()
         dimRow.addView(label("背景暗化", 13f, muted, true), LinearLayout.LayoutParams(0, -2, 1f))
@@ -446,7 +446,7 @@ class MainActivity : Activity() {
             thumbTintList = ColorStateList.valueOf(Color.WHITE)
             setOnCheckedChangeListener { _, value -> appearance.soften = value; applyBackdrop() }
         })
-        space(body, 16)
+        space(body, 8)
 
         body.addView(label("主色", 13f, muted, true))
         space(body, 12)
@@ -482,7 +482,7 @@ class MainActivity : Activity() {
             else { chosenAccent = parsed or 0xFF000000.toInt(); markSwatches(); markTiles() }
         }, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dp(10) })
         body.addView(custom)
-        space(body, 24)
+        space(body, 18)
 
         val footer = row()
         footer.addView(action("恢复默认") {

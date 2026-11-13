@@ -2,21 +2,26 @@
 
 [English overview](../../README.md) · [中文概览](../../README.zh-CN.md)
 
-These are unedited Android screenshots, captured with `adb exec-out screencap -p`
-on an Android 14 / x86_64 emulator at 720 × 1280.
+| File | Screen | Source |
+| --- | --- | --- |
+| [welcome.png](welcome.png) | Client before connecting a library | Render |
+| [library.png](library.png) | Sample library, one app installed, status toast | Render |
+| [running.png](running.png) | Running-app card on the silver backdrop | Render |
+| [appearance.png](appearance.png) | 外观 sheet: backdrop, dimming, accent color | Render |
+| [counter.png](counter.png) | Counter module from the earlier template validation run | Emulator capture |
 
-| File | Screen |
-| --- | --- |
-| [welcome.png](welcome.png) | 0.4.0 client before connecting a library |
-| [library.png](library.png) | 0.4.0 client with a demo catalog containing the Flutter counter template |
-| [counter.png](counter.png) | Counter module from the earlier template validation run |
+The renders show the redesigned client at 720 × 1280 (360 × 640 dp at 2×). They
+were drawn from the client's own layout values, colors and backdrop images with
+an HTML replica, because no Android emulator was available when the UI changed.
+They are not device captures, and small details such as font rendering, system
+bars and the dialog position can differ on a phone. The library name, host and
+the second app are sample data.
 
-The library uses a local HTTPS test server. Its address is for the emulator,
-not a public app source. The counter is the standard Flutter starter example.
+`counter.png` is an unedited `adb exec-out screencap -p` capture from an Android
+14 / x86_64 emulator at 720 × 1280.
 
-To refresh the screenshots, use a separate Android user with a clean client,
-connect a demo catalog and open the template module. Keep the same screen size
-and capture each screen after loading finishes. Check the images before committing.
+To replace the renders with device captures, use a clean client on a 720 × 1280
+emulator, connect a demo catalog, and capture each screen after loading
+finishes. Check the images before committing.
 
-前两张是 0.4.0 客户端的新截图；计数器画面来自之前的模板验证记录，均为 Android 14
-模拟器上的原始截图。图中的地址属于模拟器测试环境，不能作为公开应用库使用。
+渲染图按客户端实际的布局数值、配色和背景图绘制，并非真机截图，字体、系统栏和弹窗位置等细节可能与手机上略有不同。计数器画面为 Android 14 模拟器实拍。
