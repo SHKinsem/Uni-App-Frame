@@ -2,15 +2,21 @@
 
 # Uni Frame
 
-**在一个 Android 客户端中下载、更新和运行 Flutter 应用。**
-
-同一项目构建独立 APK 和签名模块，通过 HTTPS 或 Google Drive 分发。
+**在手机上更新和试用自己的 Flutter 应用，少折腾安装包。**
 
 [English](README.md) · 简体中文
 
 [开发入门](docs/getting-started.md) · [接入已有项目](docs/app-repositories.md) · [Agent 开发技能](.agents/skills/uni-frame-app-development/SKILL.md)
 
 </div>
+
+## 为什么做这个
+
+做 Uni Frame 的起因很简单：我觉得反复把 App 装到手机上调试，太麻烦了。
+
+我平时会同时开发几个 Flutter 项目，也会让 GPT 在云端帮我改代码、编译。可云端编译完成以后，我还得把安装包下载下来，传到手机，再安装或升级，才能看看这次改动有没有用。试完发现还要调整，就再来一遍。哪怕只改了一个小地方，这些步骤也得重复；项目一多，每个 App 都要折腾一次。
+
+我想要的流程很直接：云端构建并发布好新版本，手机上就能找到更新，打开继续试。为此，我做了 Uni Frame，把这些项目放在同一个手机 App 里管理，让手机直接获取已发布的版本，省掉我在电脑和手机之间来回搬安装包的步骤。
 
 ## 界面预览
 
@@ -24,15 +30,17 @@
 
 Android 14 模拟器实拍：0.4.0 客户端与通用 Flutter 计数器模板。客户端目前使用中文界面。[截图说明](docs/screenshots/README.md)。
 
-## 可以做什么
+## 从云端构建到手机试用
 
-- **一个网址连接应用库。** 支持 HTTPS 站点和 Google Drive 公开目录文件。使用者只需粘贴链接，不用填写项目 ID。
-- **集中管理应用。** 浏览应用列表、下载安装和更新，已下载的应用可以离线打开。
-- **一套代码，两种产物。** 同一个 Flutter 项目可以生成独立安装的 APK，也可以生成在 Uni Frame 中运行的 `.uaf` 模块。
-- **校验后再运行。** 加载模块前检查发布者签名、文件哈希和运行时兼容性。
-- **更新客户端本身。** 下载新版 Uni Frame APK，通过安卓系统确认后覆盖安装。
+接入 Uni Frame 后，日常试用的流程是：
 
-Uni Frame 基于 [Flutter](https://flutter.dev) 和 [Tencent Shadow](https://github.com/Tencent/Shadow)，运行的是按框架要求构建的应用模块，不支持直接导入任意 APK。
+1. 在云端构建新版本，把应用模块发布到 HTTPS 站点或公开的 Google Drive 应用库。
+2. 在手机上打开 Uni Frame，刷新应用库，下载或更新对应应用。
+3. 在 Uni Frame 里打开应用，继续测试。已安装的应用也可以离线打开。
+
+每个接入的 Flutter 项目可以用同一套代码构建独立 APK 和 `.uaf` 模块。项目仍保留自己的仓库，也能独立安装使用；在 Uni Frame 里试用模块时，就不用每次都手动传输 APK，再单独安装。
+
+Uni Frame 基于 [Flutter](https://flutter.dev) 和 [Tencent Shadow](https://github.com/Tencent/Shadow)，运行的是按框架要求构建的应用模块，不支持直接导入任意 APK。加载前会检查发布者签名、文件哈希和运行时兼容性。Uni Frame 客户端本身需要升级时，仍要通过 Android 的安装确认。
 
 ## 使用应用库
 

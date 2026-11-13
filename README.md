@@ -2,15 +2,21 @@
 
 # Uni Frame
 
-**Download, update and run Flutter apps in one Android client.**
-
-Build standalone APKs and signed modules. Publish an app library over HTTPS or Google Drive.
+**Update and try your Flutter apps on Android, with less time spent moving and installing APKs.**
 
 English · [简体中文](README.zh-CN.md)
 
 [Getting started](docs/getting-started.md) · [App integration](docs/app-repositories.md) · [Agent skill](.agents/skills/uni-frame-app-development/SKILL.md)
 
 </div>
+
+## Why I built this
+
+I started Uni Frame because getting each new build onto my phone had become a chore.
+
+I work on several Flutter projects, sometimes with GPT helping me write code and compile it in the cloud. But a finished build still leaves me with work to do: download the APK, transfer it to my phone, install or upgrade the app, and only then check whether the change works. If it needs another adjustment, I do it all again. Even a small change means repeating those steps, and each project adds another app to keep up to date.
+
+What I wanted was straightforward: build and publish a new version in the cloud, then pick up my phone and keep testing. I built Uni Frame to keep these projects in one Android app, where my phone can get the published versions directly, so I don't have to move each build from my computer to my phone myself.
 
 ## A look inside
 
@@ -24,15 +30,17 @@ English · [简体中文](README.zh-CN.md)
 
 Android 14 emulator captures: the 0.4.0 client and the Flutter counter template. The client UI is currently in Chinese. [Capture details](docs/screenshots/README.md).
 
-## What it does
+## From a cloud build to your phone
 
-- **One library link.** Use an HTTPS site or a public Google Drive catalog file. Users paste the link; no project IDs to enter.
-- **An app library.** Browse available apps, install updates and reopen downloaded apps offline.
-- **Two build outputs.** Keep one Flutter codebase and produce both a standalone Android APK and a signed `.uaf` module.
-- **Verified releases.** The client checks publisher signatures, file hashes and runtime compatibility before loading a module.
-- **Client updates.** Download a newer Uni Frame APK and install it through Android's normal confirmation flow.
+Once a project is integrated with Uni Frame, the usual testing workflow is:
 
-Uni Frame uses [Flutter](https://flutter.dev) and [Tencent Shadow](https://github.com/Tencent/Shadow). It runs apps built for its runtime; it cannot import arbitrary APKs.
+1. Build a new version in the cloud and publish its module to an app library hosted over HTTPS or publicly on Google Drive.
+2. Open Uni Frame on your phone, refresh the library, and download or update the app.
+3. Open the app inside Uni Frame and keep testing. Installed apps can also be reopened offline.
+
+Each integrated Flutter project can produce both a standalone APK and a `.uaf` module from the same codebase. It keeps its own repository and can still be installed independently. When testing the module inside Uni Frame, you no longer need to transfer and separately install an APK for each app update.
+
+Uni Frame uses [Flutter](https://flutter.dev) and [Tencent Shadow](https://github.com/Tencent/Shadow). It runs modules built for its runtime and cannot import arbitrary APKs. Before loading a module, it checks publisher signatures, file hashes and runtime compatibility. Updates to the Uni Frame client itself still go through Android's installation confirmation.
 
 ## Use an app library
 
