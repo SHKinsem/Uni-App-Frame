@@ -35,6 +35,10 @@ Return to JDK 21 for this project.
 
 ## Build the client
 
+If you are moving an existing client to another builder, follow
+[signing and migration](signing.md) first. Restore its original keys rather than
+running the first-time key generation steps below.
+
 Generate your own publisher key and runtime profiles; paths below are examples:
 
 ```bash
@@ -56,7 +60,8 @@ Create the test keystore only once; reuse it for later preview builds. The APK
 is written to `android/host/build/outputs/apk/release/host-release.apk`.
 The publisher key signs modules and catalogs; the Android keystore signs APKs.
 Keep both private keys outside source control. Production APK signing needs your
-own signing configuration. Preserve publisher trust and APK signing identity
+own signing configuration through `UNI_FRAME_SIGNING_PROPERTIES`; see
+[signing and migration](signing.md). Preserve publisher trust and APK signing identity
 when updating installed clients.
 
 ## Create an app

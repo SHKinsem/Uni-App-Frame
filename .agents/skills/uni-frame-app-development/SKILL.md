@@ -18,6 +18,8 @@ container, not DCloud uni-app. Compile in the cloud, not the user's local PC.
    flavors, lock dependencies, test meaningful behavior, and commit source.
 4. Use tools/release-app.py with an increasing sequence and external publisher
    key. Preserve package identity and standalone APK signing across updates.
+   Before moving builders or rebuilding a released client, read docs/signing.md.
+   Restore existing keys; do not generate new signing identities for an update.
 5. Verify independent APK startup and Uni Frame HTTPS download/startup. Exercise
    update/data persistence. Record only actual results; distinguish hardware,
    emulator and static verification. Do not inject bundles by ADB as download proof.

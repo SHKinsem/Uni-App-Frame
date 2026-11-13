@@ -671,7 +671,8 @@ class MainActivity : Activity() {
                     }
                     val inner = vertical().apply { setPadding(dp(16), dp(16), dp(16), dp(16)) }
                     card.addView(inner, FrameLayout.LayoutParams(-1, -2))
-                    line.addView(card, LinearLayout.LayoutParams(0, -1, 1f).apply { setMargins(dp(6), dp(6), dp(6), dp(6)) })
+                    // Measure card content even when this row ends with a short spacer.
+                    line.addView(card, LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(dp(6), dp(6), dp(6), dp(6)) })
                     inner.addView(appIcon(id, name, 48, record == null), LinearLayout.LayoutParams(dp(48), dp(48)))
                     space(inner, 14)
                     inner.addView(label(name, 15f, ink, true).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END })

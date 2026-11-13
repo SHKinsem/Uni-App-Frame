@@ -6,7 +6,7 @@
 
 English · [简体中文](README.zh-CN.md)
 
-[Getting started](docs/getting-started.md) · [App integration](docs/app-repositories.md) · [Agent skill](.agents/skills/uni-frame-app-development/SKILL.md)
+[Getting started](docs/getting-started.md) · [Signing & migration](docs/signing.md) · [App integration](docs/app-repositories.md) · [Agent skill](.agents/skills/uni-frame-app-development/SKILL.md)
 
 </div>
 

@@ -8,6 +8,8 @@ __pycache__/
 *.pem
 *.keystore
 *.jks
+**/apk-signing.properties
+**/key.properties
 android/host/src/main/res/raw/publisher.der
 android/host/src/main/res/raw/runtime_profiles.json
 
