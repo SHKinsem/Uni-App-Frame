@@ -82,6 +82,23 @@ class DriveAuthTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             drive_auth._post('https://oauth2.googleapis.com.evil.test/token', {})
 
+    def test_folder_precedence_matches_between_publish_and_status(self):
+        import importlib.util
+        from unittest.mock import patch
+        root = Path(__file__).resolve().parents[1]
+        modules = []
+        for name in ('publish-drive', 'drive'):
+            spec = importlib.util.spec_from_file_location(name.replace('-', '_'), root / 'tools' / f'{name}.py')
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            modules.append(module)
+        drive_auth.save({'refresh_token': 'rt', 'folder': 'saved_folder_id'}, self.env)
+        for environment, expected in [({}, 'saved_folder_id'),
+                                      ({'UNI_FRAME_DRIVE_FOLDER': 'env_folder_id'}, 'env_folder_id')]:
+            with patch.dict('os.environ', {**self.env, **environment}, clear=True):
+                self.assertEqual(modules[0].default_folder(), expected)
+                self.assertEqual(modules[1].default_folder(), expected)
+
     def test_secret_file_detection(self):
         for name in ['publisher.pem', 'host.keystore', 'apk-signing.properties', 'x.JKS']:
             self.assertTrue(looks_secret(name), name)

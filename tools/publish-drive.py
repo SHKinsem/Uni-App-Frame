@@ -138,10 +138,7 @@ def rewrite(catalog, update, mapping, key):
 
 def default_folder(environ=os.environ):
     value = environ.get('UNI_FRAME_DRIVE_FOLDER', '').strip()
-    if value:
-        return value
-    record = drive_auth.load(environ) or {}
-    return record.get('folder')
+    return value or (drive_auth.load(environ) or {}).get('folder')
 
 
 def main():

@@ -10,6 +10,7 @@ Cloud/CI sessions are ephemeral: copy the two values printed by `login`/`init`
 (UNI_FRAME_DRIVE_REFRESH_TOKEN, UNI_FRAME_DRIVE_FOLDER) into the environment's secret storage.
 """
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -17,6 +18,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from uni_frame import drive_auth
 from uni_frame.drive_api import Drive
+
+
+def default_folder():
+    value = os.environ.get('UNI_FRAME_DRIVE_FOLDER', '').strip()
+    return value or (drive_auth.load() or {}).get('folder')
 
 
 def folder_link(folder):
@@ -52,8 +58,7 @@ def init(args):
 
 
 def status(args):
-    record = drive_auth.load() or {}
-    folder = record.get('folder') or __import__('os').environ.get('UNI_FRAME_DRIVE_FOLDER')
+    folder = default_folder()  # Same precedence as publish-drive.py: environment, then saved.
     signed_in = bool(drive_auth.refresh_token())
     print('Signed in:', 'yes' if signed_in else 'no (run: python3 tools/drive.py login)')
     print('Folder:', folder_link(folder) if folder else 'none (run: python3 tools/drive.py init)')
