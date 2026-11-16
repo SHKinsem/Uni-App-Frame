@@ -24,7 +24,9 @@ container, not DCloud uni-app. Compile in the cloud, not the user's local PC.
    update/data persistence. Record only actual results; distinguish hardware,
    emulator and static verification. Do not inject bundles by ADB as download proof.
 6. Stage a complete distribution using tools/stage-app.py. Publish with ordinary
-   HTTPS upload tools or tools/publish-drive.py and the user's OAuth credentials.
+   HTTPS upload tools or tools/publish-drive.py. Drive sign-in is one-time
+   (tools/drive.py login/init, or UNI_FRAME_DRIVE_REFRESH_TOKEN and
+   UNI_FRAME_DRIVE_FOLDER from secret storage); see docs/drive-publishing.md.
    The user pastes one catalog link to browse the published apps.
 7. Keep publisher keys and OAuth tokens in secret storage. Preserve catalog IDs,
    other apps and all published ABIs. Serialize publishing and reject downgrades.

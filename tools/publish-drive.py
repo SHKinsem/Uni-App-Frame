@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Publish signed Uni Frame releases using the standard Google Drive REST API.
 
-Any agent/CI can run this with its own OAuth token; no GPT or Sites API is used.
-The input is a complete local distribution, prepared with stage-app.py.
+Sign in once with `tools/drive.py login` (or provide UNI_FRAME_DRIVE_REFRESH_TOKEN from
+secret storage); access tokens are renewed automatically. The input is a complete local
+distribution, prepared with stage-app.py. Re-running without changes renews the catalog.
 """
 import argparse
 import base64
@@ -24,6 +25,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from uni_frame.package import safe_path, verify
 from uni_frame.config import runtime_resources
+from uni_frame import drive_auth
+from uni_frame.drive_api import Drive, looks_secret
+
+CATALOG_VALID_DAYS = 90
 
 
 def link(file_id):
@@ -56,15 +61,18 @@ def local_file(directory, name):
     return path
 
 
-def load_distribution(directory, key):
+def load_distribution(directory, key, catalog_days=CATALOG_VALID_DAYS, warn=print):
     trusted = serialization.load_der_public_key((runtime_resources(ROOT) / 'publisher.der').read_bytes())
     if trusted.public_numbers() != key.public_key().public_numbers():
         raise ValueError('Publisher key differs from the installed host trust')
     catalog = read_signed((directory / 'catalog.json').read_bytes(), trusted)
     profiles = json.loads((runtime_resources(ROOT) / 'runtime_profiles.json').read_text())
     now = int(time.time())
-    if catalog['formatVersion'] != 1 or catalog['expiresAt'] <= now:
-        raise ValueError('Unsupported or expired local catalog; renew before publishing')
+    if catalog['formatVersion'] != 1:
+        raise ValueError('Unsupported local catalog')
+    for path in directory.rglob('*'):
+        if path.is_file() and looks_secret(path.name):
+            raise ValueError('Refusing to publish a directory that contains private key material: ' + path.name)
     files = set()
     for app in catalog['apps']:
         for release in app['releases']:
@@ -75,11 +83,17 @@ def load_distribution(directory, key):
             manifest = verify(path, trusted, dict(androidApi=36, abi=abi, hostApi=1,
                 runtimeFingerprint=profiles[abi]['fingerprint'], capabilities=[
                     'storage.project.v1', 'ble.scan.v1', 'ble.connect.v1', 'garmin.connectiq.v1']),
-                project=app['projectId'], channel='dev', highest_sequence=0)
+                project=app['projectId'], channel='dev', highest_sequence=0, now=0)
             if manifest['releaseSequence'] != release['sequence']:
                 raise ValueError('Catalog sequence differs from signed package')
-            catalog['expiresAt'] = min(catalog['expiresAt'], manifest['expiresAt'])
+            # One expired module must not take the whole library offline: the host refuses
+            # an expired catalog outright, but rejects an expired bundle only for that app.
+            release['expiresAt'] = manifest['expiresAt']
+            if manifest['expiresAt'] <= now:
+                warn(f"warning: {app['projectId']} {abi} release {release['sequence']} has expired; "
+                     'publish a newer release of that app')
             files.add(release['url'])
+    catalog['expiresAt'] = now + catalog_days * 86400
     update = None
     if (directory / 'host-update.json').exists():
         update = read_signed((directory / 'host-update.json').read_bytes(), trusted)
@@ -122,71 +136,40 @@ def rewrite(catalog, update, mapping, key):
     return signed(catalog, key), encoded_update
 
 
-class Drive:
-    def __init__(self, token):
-        self.token = token
-
-    def request(self, url, method='GET', data=None, headers=None):
-        parsed = urllib.parse.urlparse(url)
-        if parsed.scheme != 'https' or parsed.hostname not in ('www.googleapis.com', 'content.googleapis.com'):
-            raise ValueError('Unexpected Drive API upload endpoint')
-        request = urllib.request.Request(url, data=data, method=method,
-            headers={'Authorization': 'Bearer ' + self.token, **(headers or {})})
-        class NoRedirect(urllib.request.HTTPRedirectHandler):
-            def redirect_request(self, req, fp, code, msg, headers, newurl):
-                raise ValueError('Unexpected Drive API redirect; credentials were not forwarded')
-        return urllib.request.build_opener(NoRedirect).open(request, timeout=120)
-
-    def children(self, folder):
-        result, token = {}, None
-        while True:
-            query = {'q': f"'{folder}' in parents and trashed = false", 'pageSize': 1000,
-                     'fields': 'nextPageToken,files(id,name,md5Checksum,size)'}
-            if token:
-                query['pageToken'] = token
-            with self.request('https://www.googleapis.com/drive/v3/files?' + urllib.parse.urlencode(query)) as response:
-                page = json.load(response)
-            for file in page['files']:
-                if file['name'] in result:
-                    raise ValueError('Duplicate Drive filename: ' + file['name'])
-                result[file['name']] = file
-            token = page.get('nextPageToken')
-            if not token:
-                return result
-
-    def upload(self, folder, name, data, existing=None):
-        metadata = {'name': name}
-        method, suffix = 'POST', ''
-        if existing:
-            method, suffix = 'PATCH', '/' + existing
-        else:
-            metadata['parents'] = [folder]
-        url = 'https://www.googleapis.com/upload/drive/v3/files' + suffix + '?uploadType=resumable&fields=id,name,md5Checksum'
-        with self.request(url, method, json.dumps(metadata).encode(), {
-            'Content-Type': 'application/json; charset=UTF-8',
-            'X-Upload-Content-Type': 'application/octet-stream', 'X-Upload-Content-Length': str(len(data))}) as response:
-            location = response.headers['Location']
-        with self.request(location, 'PUT', data, {'Content-Type': 'application/octet-stream'}) as response:
-            result = json.load(response)
-        if result['md5Checksum'] != hashlib.md5(data).hexdigest():
-            raise ValueError('Drive upload checksum differs')
-        return result['id']
+def default_folder(environ=os.environ):
+    value = environ.get('UNI_FRAME_DRIVE_FOLDER', '').strip()
+    return value or (drive_auth.load(environ) or {}).get('folder')
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', type=Path, required=True)
-    parser.add_argument('--folder', required=True, help='Existing public distribution folder ID (publisher only)')
+    parser.add_argument('--folder', help='Public distribution folder ID; defaults to UNI_FRAME_DRIVE_FOLDER '
+                        'or the folder created by tools/drive.py init')
     parser.add_argument('--key', type=Path, required=True)
+    parser.add_argument('--catalog-valid-days', type=int, default=CATALOG_VALID_DAYS,
+                        help='How long clients accept this catalog without a newer publish (1-365)')
     args = parser.parse_args()
+    if not 1 <= args.catalog_valid_days <= 365:
+        parser.error('catalog-valid-days must be 1-365')
+    args.folder = args.folder or default_folder()
+    if not args.folder:
+        parser.error('No distribution folder. Run: python3 tools/drive.py init, or pass --folder')
     link(args.folder)
-    token = os.environ.get('GOOGLE_DRIVE_ACCESS_TOKEN')
-    if not token:
-        parser.error('Provide GOOGLE_DRIVE_ACCESS_TOKEN through your secret manager, with Drive write access')
+    if args.key.resolve().is_relative_to(args.directory.resolve()):
+        parser.error('The private key must not be inside the distribution directory')
+    try:
+        token = drive_auth.access_token()
+    except drive_auth.AuthError as error:
+        parser.error(str(error))
     key = serialization.load_pem_private_key(args.key.read_bytes(), password=None)
-    catalog, update, files = load_distribution(args.directory, key)
+    catalog, update, files = load_distribution(args.directory, key, args.catalog_valid_days,
+                                               lambda text: print(text, file=sys.stderr))
     drive = Drive(token)
     children = drive.children(args.folder)
+    leaked = sorted(name for name in children if looks_secret(name))
+    if leaked:
+        raise ValueError('Distribution folder contains private key material; remove it first: ' + ', '.join(leaked))
     if 'catalog.json' in children:
         with drive.request('https://www.googleapis.com/drive/v3/files/' + children['catalog.json']['id'] + '?alt=media') as response:
             previous = read_signed(response.read(), key.public_key())

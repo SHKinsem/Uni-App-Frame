@@ -26,7 +26,7 @@ p.add_argument('--sequence', type=int, required=True)
 p.add_argument('--abi', choices=['arm64-v8a','x86_64'], required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--key', type=Path, required=True)
-p.add_argument('--valid-days', type=int, default=7)
+p.add_argument('--valid-days', type=int, default=90)
 p.add_argument('--min-api', type=int, default=24)
 args = p.parse_args()
 if not 1 <= args.valid_days <= 365 or args.min_api < 24:

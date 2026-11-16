@@ -8,11 +8,12 @@ p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--spec', type=Path, required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--key', type=Path, required=True)
+p.add_argument('--valid-days', type=int, default=90, help='Catalog freshness, independent of module expiry (1-365)')
 a = p.parse_args()
+assert 1 <= a.valid_days <= 365, 'valid-days must be 1-365'
 key = serialization.load_pem_private_key(a.key.read_bytes(), password=None)
 spec = json.loads(a.spec.read_text())
 apps = []
-expirations = [int(time.time()) + 86400 * 7]
 for item in spec['apps']:
     releases = []
     project = None
@@ -25,17 +26,18 @@ for item in spec['apps']:
             assert envelope['algorithm'] == 'RS256'
             key.public_key().verify(base64.b64decode(envelope['signature']), raw, padding.PKCS1v15(), hashes.SHA256())
             m = json.loads(raw)
-        assert m['expiresAt'] > time.time(), 'Expired package'
-        expirations.append(m['expiresAt'])
+        if m['expiresAt'] <= time.time():  # Only this app becomes uninstallable, not the whole library.
+            print(f"warning: {path} has expired; publish a newer release of {m['projectId']}", file=__import__('sys').stderr)
         assert project is None or project == m['projectId'], 'Mixed project identity'
         project = m['projectId']
         releases.append(dict(abi=m['abis'][0], sequence=m['releaseSequence'], version=m['buildId'],
                              minAndroidApi=m['minAndroidApi'], runtimeFingerprint=m['runtimeFingerprint'],
-                             sha256=hashlib.sha256(file.read_bytes()).hexdigest(), url=path))
+                             sha256=hashlib.sha256(file.read_bytes()).hexdigest(), url=path,
+                             expiresAt=m['expiresAt']))
     assert releases and len({r['abi'] for r in releases}) == len(releases)
     apps.append(dict(projectId=project, name=item['name'], description=item['description'], releases=releases))
 assert len({item['projectId'] for item in apps}) == len(apps)
-payload = json.dumps(dict(formatVersion=1, name=spec['name'], expiresAt=min(expirations), apps=apps),
+payload = json.dumps(dict(formatVersion=1, name=spec['name'], expiresAt=int(time.time()) + a.valid_days * 86400, apps=apps),
                      ensure_ascii=False, separators=(',', ':')).encode()
 signature = key.sign(payload, padding.PKCS1v15(), hashes.SHA256())
 encoded = json.dumps(dict(algorithm='RS256', payload=base64.b64encode(payload).decode(),
