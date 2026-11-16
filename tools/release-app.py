@@ -27,7 +27,7 @@ def main():
     parser.add_argument('--sequence', type=int, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--key', type=Path, required=True)
-    parser.add_argument('--valid-days', type=int, default=30)
+    parser.add_argument('--valid-days', type=int, default=90)
     args = parser.parse_args()
     project, output = args.project.resolve(), args.output.resolve()
     config = json.loads((project / 'uni.project.json').read_text())

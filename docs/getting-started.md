@@ -116,18 +116,21 @@ requiring login. Share the directory URL or the full `catalog.json` URL.
 
 ### Google Drive
 
-For Drive, create a dedicated folder and set it to anyone-with-link / viewer.
-Provide a short-lived OAuth token through GOOGLE_DRIVE_ACCESS_TOKEN, then run:
+Sign in once and create a public distribution folder (details, cloud/CI secrets
+and the one-time OAuth client setup: [Drive publishing](drive-publishing.md)):
 
 ```bash
+python3 tools/drive.py login                 # enter the shown code at google.com/device
+python3 tools/drive.py init --name 'My apps'
 python3 tools/publish-drive.py --directory /work/distribution \
-  --folder YOUR_DISTRIBUTION_FOLDER_ID --key /secure/uni-frame/publisher.pem
+  --key /secure/uni-frame/publisher.pem
 ```
 
 The publisher preserves the catalog's Drive file ID and prints a single share
 link for users to paste into Uni Frame. Internal folder/file IDs are publisher
 configuration; app users never need to enter them separately. Publish one release
-at a time and keep published package files immutable.
+at a time and keep published package files immutable. No manual access tokens are
+needed; access is renewed automatically.
 
 To make a fresh client install connect to your library on first launch, pass the
 printed catalog link when building the client. It is a build input, not a
@@ -159,7 +162,8 @@ Drive may also show a download confirmation.
 
 ### Renew releases
 
-Catalogs expire after at most seven days; bundles default to thirty days. Publish
-a newer app release before its bundle expires and regenerate signed catalog
-metadata before the catalog expires. There is no automatic renewal scheduler.
-Already installed apps remain available offline.
+Catalogs and bundles both default to 90 days, independently of each other. An
+expired bundle only blocks new installs of that one app; the rest of the library
+keeps working. Publish a newer app release before its bundle expires, and re-run
+the publish command (no changes needed) before the catalog expires. There is no
+automatic renewal scheduler. Already installed apps remain available offline.

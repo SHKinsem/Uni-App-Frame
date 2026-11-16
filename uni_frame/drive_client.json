@@ -1,0 +1,5 @@
+{
+  "_comment": "Framework-wide Google OAuth client (type: TVs and Limited Input devices, Drive API enabled, scope drive.file). Not a secret for installed apps; see docs/drive-publishing.md. Override with UNI_FRAME_DRIVE_CLIENT_ID / UNI_FRAME_DRIVE_CLIENT_SECRET.",
+  "client_id": "",
+  "client_secret": ""
+}

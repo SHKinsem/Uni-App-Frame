@@ -103,6 +103,46 @@ class WorkflowTests(unittest.TestCase):
             self.publish(self.release('first', 1, expired=True))
         self.assertFalse((self.dist / 'catalog.json').exists())
 
+    def expired_app_in_distribution(self):
+        release = self.release('old', 1, expired=True)
+        shutil.copy(release / 'old-1.uaf', self.dist / 'old-1.uaf')
+        spec = self.root / 'spec.json'
+        spec.write_text(json.dumps({'name': 'lib', 'apps': [
+            {'name': 'old', 'description': 'test', 'packages': ['old-1.uaf']}]}))
+        import subprocess, sys
+        result = subprocess.run([sys.executable, str(ROOT / 'tools/build-catalog.py'), '--spec', str(spec),
+                                 '--output', str(self.dist / 'catalog.json'), '--key', str(self.key_path)],
+                                capture_output=True, text=True, check=True)
+        self.assertIn('expired', result.stderr)
+
+    def test_expired_app_does_not_block_library_or_other_apps(self):
+        self.expired_app_in_distribution()
+        self.publish(self.release('fresh', 1))
+        result = self.stage.read_catalog(self.dist / 'catalog.json', self.key.public_key())
+        self.assertEqual({a['projectId'] for a in result['apps']}, {'old', 'fresh'})
+        self.assertGreater(result['expiresAt'], time.time() + 80 * 86400)
+        old = next(a for a in result['apps'] if a['projectId'] == 'old')['releases'][0]
+        self.assertLess(old['expiresAt'], time.time())
+
+    def test_drive_publish_renews_catalog_despite_expired_app(self):
+        self.expired_app_in_distribution()
+        (self.dist / 'host-update.json').unlink()
+        drive = load('publish-drive')
+        warnings = []
+        catalog, update, files = drive.load_distribution(self.dist, self.key, 30, warnings.append)
+        self.assertEqual(files, ['old-1.uaf'])
+        self.assertIsNone(update)
+        self.assertTrue(any('expired' in text for text in warnings))
+        self.assertAlmostEqual(catalog['expiresAt'], time.time() + 30 * 86400, delta=60)
+
+    def test_drive_publish_refuses_key_material_in_distribution(self):
+        self.publish(self.release('first', 1))
+        (self.dist / 'host-update.json').unlink()
+        (self.dist / 'publisher.pem').write_text('secret')
+        drive = load('publish-drive')
+        with self.assertRaisesRegex(ValueError, 'private key'):
+            drive.load_distribution(self.dist, self.key)
+
     def test_modified_bundle_rejected_before_copy(self):
         release = self.release('first', 1)
         (release / 'first-1.uaf').write_bytes(b'changed')

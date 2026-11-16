@@ -35,7 +35,7 @@ def read_catalog(path, public_key):
     return catalog  # An expired catalog can be renewed after verifying all packages.
 
 
-def check_bundle(path, public_key, profiles, project):
+def check_bundle(path, public_key, profiles, project, allow_expired=False):
     with zipfile.ZipFile(path) as archive:
         metadata = json.loads(archive.read('manifest.json'))
     if len(metadata['abis']) != 1:
@@ -44,7 +44,8 @@ def check_bundle(path, public_key, profiles, project):
     profile = profiles[abi]
     return verify(path, public_key, dict(androidApi=36, abi=abi, hostApi=1,
                   runtimeFingerprint=profile['fingerprint'], capabilities=['storage.project.v1']),
-                  project=project, channel='dev', highest_sequence=0)
+                  project=project, channel='dev', highest_sequence=0,
+                  now=0 if allow_expired else None)
 
 
 def stage(release_dir, directory, key_path):
@@ -93,7 +94,7 @@ def stage(release_dir, directory, key_path):
                 raise ValueError('Catalog package path leaves the distribution directory')
             if hashlib.sha256(path.read_bytes()).hexdigest() != release['sha256']:
                 raise ValueError('Existing catalog digest mismatch')
-            check_bundle(path, trusted, profiles, app['projectId'])
+            check_bundle(path, trusted, profiles, app['projectId'], allow_expired=True)
             paths.append(release['url'])
         spec['apps'].append({'name': app['name'], 'description': app['description'], 'packages': paths})
     spec['apps'].append({'name': receipt['name'], 'description': receipt['description'],
